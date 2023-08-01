@@ -1,7 +1,7 @@
 import serial
 import threading
 import time
-
+from nav.location import Location as loc
 class motor_driver:
     def __init__(self, port, baudrate):
         self.motor_angle = 0
@@ -47,22 +47,18 @@ class motor_driver:
 
 if __name__ == '__main__':
     left_driver = motor_driver("/dev/left_roll",115200)
+    right_driver = motor_driver("/dev/right_roll",115200)
     left_driver.start()
+    right_driver.start()
+    time.sleep(0.5)
+    loccount = loc(left_driver.motor_angle,right_driver.motor_angle)
     try:
+        location_list = []
         while True:
-            speed = 0
-            for i in range(50):
-                left_driver.velocity = speed
-                speed  = speed + 0.3
-                time.sleep(0.1)
-                print(left_driver.motor_angle)
-
-            for i in range(50):
-                left_driver.velocity = speed
-                speed  = speed - 0.3
-                time.sleep(0.1)
-                print(left_driver.motor_angle)
-
+            left_driver.velocity = 0.5
+            right_driver.velocity = 0.5
+            location_list  = loccount.count_location(left_driver.motor_angle,right_driver.motor_angle)
+            print(location_list)
     except:
         left_driver.velocity = 0
         time.sleep(0.1)
