@@ -4,6 +4,7 @@ import socket
 
 motor_angle = 0
 port = 25501
+
 serial_port = serial.Serial(
     port="/dev/left_roll",
     baudrate=115200,
