@@ -4,9 +4,7 @@ import RPi.GPIO as GPIO
 
 import cv2 
 import numpy as np
-cap = cv2.VideoCapture(-1)
-ret, img = cap.read()
-img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
 
 
 
@@ -31,16 +29,15 @@ def center():
 
 
 def switch(w,h):
-    sw = 346 - ((346-303)/290) * w
-    sh = 382 - ((382-325)/250) * h
+    sw = 346 - ((346-303)/290) * w 
+    sh = 382 - ((382-325)/250) * h 
     return sw,sh
 
 
 def any():
-    global img
+    cap = cv2.VideoCapture(-1)
+    ret, img = cap.read()
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-    print(1)
     point_human_1 = (180, 30)
     point_human_2 = (470, 280)
 
@@ -68,6 +65,28 @@ def any():
     print(box)
     w = box[0][0]
     h = box[0][1]
+    loc_w,loc_h = switch(w,h)
+    left_driver.raw = float(loc_w)
+    left_driver.lll = float(loc_h)
+    time.sleep(0.4)
+    w = box[1][0]
+    h = box[1][1]
+    loc_w,loc_h = switch(w,h)
+    left_driver.raw = float(loc_w)
+    left_driver.lll = float(loc_h)
+    time.sleep(0.4)
+    w = box[2][0]
+    h = box[2][1]
+    loc_w,loc_h = switch(w,h*0.9)
+    left_driver.raw = float(loc_w)
+    left_driver.lll = float(loc_h)
+    time.sleep(0.4)
+    w = box[3][0]
+    h = box[3][1]
+    loc_w,loc_h = switch(w,h*0.9)
+    left_driver.raw = float(loc_w)
+    left_driver.lll = float(loc_h)
+    time.sleep(0.4)
     print(w)
     print(h)
 
