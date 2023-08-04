@@ -2,29 +2,29 @@
 # For commercial use, please contact the author for authorization. For non-commercial use, please indicate the source.
 # 协议(License)：署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0)
 # 作者(Author)：s-ubt-b
-# 链接(URL)：https://qwqpap.xyz/opencv%e5%ae%9e%e7%8e%b0%e6%93%8d%e5%9c%ba%e8%b7%91%e9%81%93%e7%9a%84%e8%af%86%e5%88%ab/6.html
+# 链接(URL)：https://qwqpap.xyz/
 # 来源(Source)：天鹅绒房间
 
 import cv2
 import numpy as np
 import time
- 
+
 # 'camera' or 'picture'
 mode = 'camera'
- 
+
 if mode == 'camera':
-    cap = cv2.VideoCapture(0)
- 
- 
+    cap = cv2.VideoCapture(-1)
+
+
 def update(x):
     global gs, erode, Hmin, Smin, Vmin, Hmax, Smax, Vmax, img, Hmin2, Hmax2, img0, size_min
- 
+
     if mode == 'camera':
         ret, img0 = cap.read()
     elif mode == 'picture':
         img0 = cv2.imread('test.jpg')
     img = img0.copy()
- 
+
     gs = cv2.getTrackbarPos('gs', 'image')
     erode = cv2.getTrackbarPos('erode', 'image')
     Hmin = cv2.getTrackbarPos('Hmin1', 'image')
@@ -59,8 +59,8 @@ def update(x):
         cv2.rectangle(img0, (x, y), (x + w, y + h), (0, 255, 0), 2)
         pos.append([int(x + w / 2), y + h / 2])
     print(pos)
- 
- 
+
+
 def img_test():
     sleep = 0.1
     gs = 0
@@ -74,7 +74,7 @@ def img_test():
     Vmin = 50
     Vmax = 240
     size_min = 1000
- 
+
     # 创建窗口
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.createTrackbar('gs', 'image', 0, 8, update)
@@ -112,10 +112,7 @@ def img_test():
         if cv2.waitKey(1) == 27:
             break
     cv2.destroyAllWindows()
- 
- 
+
+
 if __name__ == '__main__':
-    try:
-        img_test()
-    except:
-        cap.release()
+    img_test()
