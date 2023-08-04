@@ -19,4 +19,4 @@
     + 之后就可以读取或写入类的变量来控制电机：
       + 读取编码器里程:`print(left_driver.motor_angle)`
       + 写入电机速度(rad/s):`left_driver.velocity = 0.5`
-
+      

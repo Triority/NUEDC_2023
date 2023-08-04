@@ -1,11 +1,24 @@
 import serial
 import threading
 import time
-from nav.location import Location as loc
+from simple_pid import PID
+
+
 class motor_driver:
     def __init__(self, port, baudrate):
         self.motor_angle = 0
         self.velocity = 0
+
+        self.PID = False
+        self.P = 10
+        self.I = 0
+        self.D = 1
+        self.target_angle = 0
+        self.output_limits = (-10, 10)
+        self.error_k = 1
+        self.PID_timesleep = 0.01
+
+        self.error = 0
 
         self.serial_port = serial.Serial(
             port=port,
@@ -20,7 +33,7 @@ class motor_driver:
         q = threading.Thread(target=self.serial_write, args=())
         p.start()
         q.start()
-
+        time.sleep(0.2)
 
     def serial_read(self):
         angle_str = ""
@@ -29,7 +42,7 @@ class motor_driver:
                 if self.serial_port.inWaiting() > 0:
                     data = self.serial_port.read().decode()
                     if data == '\n':
-                        self.motor_angle = angle_str
+                        self.motor_angle = float(angle_str)
                         angle_str = ""
                     else:
                         angle_str = angle_str + data
@@ -41,25 +54,48 @@ class motor_driver:
             data = 'T' + str(self.velocity) + '\n'
             self.serial_port.write(data.encode())
             time.sleep(0.05)
-    
-    def get_angle(self):
-        return self.motor_angle
+
+    def angle_PID(self):
+        pid = PID(self.P, self.I, self.D, setpoint=self.target_angle,output_limits = self.output_limits)
+        while True:
+            if self.PID:
+                self.error  = self.error_k * (self.target_angle - self.motor_angle)
+                self.velocity = pid(self.error)
+                time.sleep(self.PID_timesleep)
+            else:
+                break
+
+    def start_PID(self):
+        r = threading.Thread(target=self.angle_PID, args=())
+        r.start()
+
+    def stop(self):
+        self.PID = False
+        self.velocity = 0
+        time.sleep(0.1)
+
+
 
 if __name__ == '__main__':
     left_driver = motor_driver("/dev/left_roll",115200)
     right_driver = motor_driver("/dev/right_roll",115200)
     left_driver.start()
     right_driver.start()
-    time.sleep(0.5)
-    loccount = loc(left_driver.motor_angle,right_driver.motor_angle)
+    time.sleep(1)
+    left_driver.PID = True
+    left_driver.start_PID()
     try:
-        location_list = []
+        tar = left_driver.motor_angle
+
         while True:
-            left_driver.velocity = 0.5
-            right_driver.velocity = 0.5
-            location_list  = loccount.count_location(left_driver.motor_angle,right_driver.motor_angle)
-            print(location_list)
+            print(left_driver.velocity)
+            left_driver.target_angle = tar-0.1
+
     except:
+        left_driver.stop()
+        right_driver.stop()
+        print('stoped')
         left_driver.velocity = 0
+        right_driver.velocity = 0
         time.sleep(0.1)
         exit()
