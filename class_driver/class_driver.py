@@ -19,7 +19,6 @@ class motor_driver:
         self.PID_timesleep = 0.01
 
         self.error = 0
-
         self.serial_port = serial.Serial(
             port=port,
             baudrate=baudrate,
@@ -51,7 +50,7 @@ class motor_driver:
     
     def serial_write(self):
         while 114514:
-            data = 'T' + str(self.velocity) + '\n'
+            data = 'T' + str(self.raw) + '\n'
             self.serial_port.write(data.encode())
             time.sleep(0.05)
 
@@ -81,7 +80,7 @@ if __name__ == '__main__':
     right_driver = motor_driver("/dev/right_roll",115200)
     left_driver.start()
     right_driver.start()
-    time.sleep(1)
+    time.sleep(0.5)
     left_driver.PID = True
     left_driver.start_PID()
     try:
