@@ -6,16 +6,6 @@ import cv2
 import numpy as np
 
 
-
-
-
-
-
-
-
-
-
-
 def get_points(img):
     h = img.shape[0]
     w = img.shape[1]
@@ -48,10 +38,11 @@ def get_points(img):
 
 
 
-
+last_x = 0
+last_y = 0
 
 def img_get(img):
-
+    global last_x,last_y
     size_min = 0
     # 滤波二值化
     # gs_frame = cv2.GaussianBlur(img, (gs, gs), 1)
@@ -63,7 +54,6 @@ def img_get(img):
     # 外接计算
     cnts = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     target_list = []
-    pos = []
     if size_min < 1:
         size_min = 1
     for c in cnts:
@@ -76,8 +66,10 @@ def img_get(img):
         x, y, w, h = cv2.boundingRect(cnt)
         # cv2.rectangle(img0, (x, y), (x + w, y + h), (0, 255, 0), 2)
     if len(target_list) == 0:
-        x = 0
-        y = 0
+        x = last_x
+        y = last_y
+    last_x = x
+    last_y = y
     return x,y
 
 def round():
@@ -97,19 +89,12 @@ def round():
 def center():
     # 回到中点
     left_driver.raw = float(323) # 右小 左大
-    left_driver.lll = float(358) # 上大 下小
+    left_driver.lll = float(348) # 上大 下小
 
 
 def mini_any(img):
     point_human_1 = (200, 30)
     point_human_2 = (460, 280)
-
-    pts3_d1 = np.float32([[210, 30], [450, 30], [180, 280], [470, 280]])  # 原图点
-    pts3_d2 = np.float32([[180, 30], [470, 30], [180, 280], [470, 280]])  # 随机得到的四个点
-    m = cv2.getPerspectiveTransform(pts3_d1, pts3_d2)  # 矩阵计算
-
-    img = cv2.warpPerspective(img, m, (640, 480))
-
 
     #point_human_1 = (0, 0)
     #point_human_2 = (565, 460)
@@ -126,13 +111,6 @@ def any(img):
     #point_human_1 = (180, 30)
     point_human_1 = (200, 30)
     point_human_2 = (460, 280)
-
-    pts3_d1 = np.float32([[210, 30], [450, 30], [180, 280], [470, 280]])  # 原图点
-    pts3_d2 = np.float32([[180, 30], [470, 30], [180, 280], [470, 280]])  # 随机得到的四个点
-    m = cv2.getPerspectiveTransform(pts3_d1, pts3_d2)  # 矩阵计算
-
-    ##img = cv2.warpPerspective(img, m, (640, 480))
-
 
     #point_human_1 = (0, 0)
     #point_human_2 = (565, 460)
@@ -158,7 +136,58 @@ def any(img):
 
 def moive_point(mv_x,mv_y):
     left_driver.raw = left_driver.raw-float(mv_x) # 右小 左大
-    left_driver.lll = left_driver.lll-float(mv_y)*0.5
+    left_driver.lll = left_driver.lll-float(mv_y)
+
+def list_cocu(x1,y1,x2,y2):
+    step = 20
+    fin_list = []
+    x_now = x1 
+    y_now = y1
+    x_step = int(x2 - x1)/step
+    y_step = int(y2 - y1)/step
+    for i in range(0,step,1):
+        x_now = x_now + x_step
+        y_now = y_now + y_step
+        post = [x_now,y_now]
+        fin_list.append(post)
+    return fin_list
+
+
+
+
+def control(list_list,delay):
+    kp = 0.02
+    kd = 0.001
+    ki = 0.001
+    dt_y = 0
+    dt_x = 0
+    for ps in list_list:
+        print(ps)
+        for i in range(1,20):
+            all_error_x = 0
+            all_error_y = 0
+            error_past_x = 0
+            error_past_y = 0
+            ret, img = cap.read()
+            px,py = mini_any(img)
+            error_now_y = (ps[0] - px)
+            error_now_x = (ps[1] - py)
+            dt_y = error_now_y*kp + (-error_past_y +error_now_y)*kd + all_error_y *ki
+            dt_x = error_now_x*kp + (-error_past_x +error_now_x)*kd + all_error_y *ki
+            error_past_x = error_now_x
+            error_past_y = error_now_y 
+            all_error_x += error_now_x
+            all_error_y += error_now_y
+            print("px:"+str(px)+"py:"+str(py))
+
+            moive_point(dt_x,dt_y)
+            #print(ps[0] - px,ps[1] - py)
+            #print(ps)
+            #print(px,py)
+            time.sleep(delay)
+
+
+
 
 
 if __name__ == '__main__':
@@ -184,9 +213,8 @@ if __name__ == '__main__':
 
 
 
-
     while True:
-
+        print(1)
         if GPIO.input(27):
             center()
             print("center")
@@ -200,150 +228,20 @@ if __name__ == '__main__':
             time.sleep(1)
             buzze.ChangeDutyCycle(0)
         else:
-            kp = 0.004
+           
             ret, img = cap.read()
             kk,px,py=any(img)
             
-            rate_1 = (kk[1][1] - kk[0][1])/(kk[1][0]-kk[0][0])
-            list_1 = []
-            step_y = 0.1 * rate_1
-            j = kk[0][1]
-            for i in range(10*kk[0][0],10*kk[1][0],1):
-                i = i/10
-                j = j + step_y
-                point = [i,j]
-                list_1.append(point)
-            #print(list_1)    
-
-            rate_2 = (kk[2][0]-kk[1][0])/(kk[2][1]-kk[1][1])
-            list_2 = []
-            step_x = 0.1* rate_2
-            j = kk[1][0]
-            for i in range(10*kk[1][1],10*kk[2][1],1):
-                i = i/10
-                j = j + step_x
-                point = [j,i]
-                list_2.append(point)
-            #print(list_2)
-
-
-            rate_3 = (kk[3][1] - kk[2][1])/(kk[3][0]-kk[2][0])
-            list_3 = []
-            step_y = 0.1 * rate_3
-            j = kk[2][1]
-            for i in range(10*kk[2][0],10*kk[3][0],-1):
-                i = i/10
-                j = j - step_y
-                point = [i,j]
-                list_3.append(point)
-            #print(list_3)    
-
-
-            rate_4 = (kk[0][0]-kk[3][0])/(kk[0][1]-kk[3][1])
-            list_4 = []
-            step_x = 0.1* rate_4
-            print(step_x)
-            j = kk[3][0]
-            for i in range(10*kk[3][1],10*kk[0][1],-1):
-                i = i/10
-                j = j - step_x
-                point = [j,i]
-                list_4.append(point)
-            # print(list_4)
-
+            list_1 = list_cocu(kk[0][0],kk[0][1],kk[1][0],kk[1][1])
             
-            while not GPIO.input(26) or not GPIO.input(27):
-                #print(list_1)
-                #print(list_2)
-                #print(list_3)
-                #print(list_4)
-                fr = 0.05
-                """
-                time.sleep(3)
-                for ps in list_1:
-                    ret, img = cap.read()
-                    px,py = mini_any(img)
-                    dt_x = (ps[0] - px)*kp
-                    dt_y = (ps[1] - py)*kp
-                    moive_point(dt_x,dt_y)
-                    print(ps[0] - px,ps[1] - py)
-                    
-                    time.sleep(fr)
-                print(1)
-                time.sleep(0.2)
-                for ps in list_2:
-                    ret, img = cap.read()
-                    px,py = mini_any(img)
-                    dt_x = (ps[0] - px)*kp
-                    dt_y = (ps[1] - py)*kp
-                    moive_point(dt_x,dt_y,ps[1] - py)
-                    print(ps[0] - px)
-                    time.sleep(fr)
-                print(2)
-                time.sleep(0.2)
-                for ps in list_3:
-                    ret, img = cap.read()
-                    px,py = mini_any(img)
-                    dt_x = (ps[0] - px)*kp
-                    dt_y = (ps[1] - py)*kp
-                    moive_point(dt_x,dt_y)
-                    print(ps[0] - px,ps[1] - py)   
-                    time.sleep(fr)
-                print(3)
-                time.sleep(0.2)
-                
-                
-                for ps in list_4:
-                    ret, img = cap.read()
-                    px,py = mini_any(img)
-                    dt_x = (ps[0] - px)*kp
-                    dt_y = (ps[1] - py)*kp
-                    moive_point(dt_x,dt_y)
-                    print(ps[0] - px,ps[1] - py)
-                    time.sleep(fr)
-                print(4)
-                """
-                time.sleep(0.2)
-                for i in range(1,10000000):
-                    ret, img = cap.read()
-                    
-                    py,px = mini_any(img)
-                    print(px,py)
-                    dt_x = (kk[2][1]-px)*kp
-                    dt_y = (kk[2][0]-py)*kp
-                    moive_point(dt_x,dt_y)
-                    time.sleep(fr)
-                time.sleep(0.2)
-                for i in range(1,100):
-                    ret, img = cap.read()
-                    
-                    px,py = mini_any(img)
-                    dt_x = (kk[0][0]-px)*kp
-                    dt_y = (kk[0][1]-py)*kp
-                    moive_point(dt_x,dt_y)
-                    time.sleep(fr)
-                time.sleep(0.2)
-                for i in range(1,100):
-                    ret, img = cap.read()
-                    
+            list_2 = list_cocu(kk[1][0],kk[1][1],kk[2][0],kk[2][1])
+            list_3 = list_cocu(kk[2][0],kk[2][1],kk[3][0],kk[3][1])
+            list_4 = list_cocu(kk[3][0],kk[3][1],kk[0][0],kk[0][1])
+            
 
-                    px,py = mini_any(img)
-                    
-                    dt_x = (kk[2][0]-px)*kp
-                    dt_y = (kk[2][1]-py)*kp
-                    moive_point(dt_x,dt_y)
-                    time.sleep(fr)
-                time.sleep(0.2)
-                for i in range(1,100):
-                    ret, img = cap.read()
-                    
-                    dt_x = (kk[3][0]-px)*kp
-                    dt_y = (kk[3][1]-py)*kp
-                    moive_point(dt_x,dt_y)
-                    time.sleep(fr)
-    print("error")
-    left_driver.raw = 370
-    left_driver.lll = 370
-    time.sleep(0.1)
-    cap.release()
-    exit()
+
+            while not GPIO.input(26) or not GPIO.input(27):
+                control(list_1,0.02)
+                control(list_2,0.02)
+                control(list_3,0.02)
+                control(list_4,0.02)
