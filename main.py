@@ -104,8 +104,8 @@ def mini_any(img):
     return point_y,point_x
 
 def any(img):
-    left_driver.raw = float(323) # 右小 左大
-    left_driver.lll = float(358) # 上大 下小
+    left_driver.raw = float(463) # 右小 左大
+    left_driver.lll = float(339) # 上大 下小
     
     
     #point_human_1 = (180, 30)
@@ -138,6 +138,8 @@ def moive_point(mv_x,mv_y):
     left_driver.raw = left_driver.raw-float(mv_x) # 右小 左大
     left_driver.lll = left_driver.lll-float(mv_y)
 
+
+
 def list_cocu(x1,y1,x2,y2):
     step = 20
     fin_list = []
@@ -157,8 +159,11 @@ def list_cocu(x1,y1,x2,y2):
 
 def control(list_list,delay):
     kp = 0.02
-    kd = 0.001
-    ki = 0.001
+    kd = 0.01
+    ki = 0
+    kpa = 0.01
+    kda = 0.005
+    kia = 0.005
     dt_y = 0
     dt_x = 0
     for ps in list_list:
@@ -172,14 +177,14 @@ def control(list_list,delay):
             px,py = mini_any(img)
             error_now_y = (ps[0] - px)
             error_now_x = (ps[1] - py)
-            dt_y = error_now_y*kp + (-error_past_y +error_now_y)*kd + all_error_y *ki
-            dt_x = error_now_x*kp + (-error_past_x +error_now_x)*kd + all_error_y *ki
+            dt_y = error_now_y*kp - (-error_past_y +error_now_y)*kd + all_error_y *ki
+            dt_x = error_now_x*kpa - (-error_past_x +error_now_x)*kda + all_error_y *kia
             error_past_x = error_now_x
             error_past_y = error_now_y 
             all_error_x += error_now_x
             all_error_y += error_now_y
             print("px:"+str(px)+"py:"+str(py))
-
+            print("tx:"+str(dt_x)+"ty:"+str(dt_y))
             moive_point(dt_x,dt_y)
             #print(ps[0] - px,ps[1] - py)
             #print(ps)
