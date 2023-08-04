@@ -16,7 +16,7 @@
   + `class_driver.py`:电机调用程序，调用方法如下:
     + `left_driver = motor_driver("/dev/left_roll",115200)`以左侧电机为例首先定义类对象，参数为串口路径和波特率
     + ` left_driver.start()`调用start方法，开始连接并控制电机
-    + 之后就可以读取或写入类的变量来控制电机：
+      + 之后就可以读取或写入类的变量来控制电机：
       + 读取编码器里程:`print(left_driver.motor_angle)`
       + 写入电机速度(rad/s):`left_driver.velocity = 0.5`
-      
+    + 如果需要进行PID位置控制，首先修改类的PID参数变量，例如`left_driver.P = 0`，当然也可以使用默认值。然后启用并开始PID计算`left_driver.PID = True`,`left_driver.start_PID()`。然后就可以设置目标位置了`left_driver.target_angle`
