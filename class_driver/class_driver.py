@@ -55,7 +55,8 @@ if __name__ == '__main__':
     time.sleep(0.5)
     try:
         while True:
-            left_driver.motor_angle = 
+            left_driver.motor_angle = 0
+            right_driver.motor_angle = 0
     except:
         left_driver.stop()
         right_driver.stop()
