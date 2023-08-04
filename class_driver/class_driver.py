@@ -45,7 +45,7 @@ class motor_driver:
             self.serial_port.write(data.encode())
             data = "R" + str(self.lll) + '\n'
             self.serial_port.write(data.encode())
-            time.sleep(0.05)
+            time.sleep(0.005)
     
     def get_angle(self):
         return self.motor_angle
