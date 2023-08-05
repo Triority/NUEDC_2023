@@ -9,7 +9,7 @@ import numpy as np
 def get_points(img):
     h = img.shape[0]
     w = img.shape[1]
-
+    
     for i in range(h):  # 上
         if 255 in img[i]:
             white_index = np.where(img[i] == 255)
@@ -34,6 +34,7 @@ def get_points(img):
             print('d:', )
             point_d = [white_index[0][0], i]
             break
+    
     return [point_a, point_b, point_c, point_d]
 
 
@@ -73,23 +74,23 @@ def img_get(img):
     return x,y
 
 def round():
-    left_driver.raw = float(346)
-    left_driver.lll = float(382)
+    left_driver.raw = float(420)
+    left_driver.lll = float(359)
     time.sleep(0.4)
-    left_driver.raw = float(303)
-    left_driver.lll = float(382)
+    left_driver.raw = float(477)
+    left_driver.lll = float(359)
     time.sleep(0.4)
-    left_driver.raw = float(303)
-    left_driver.lll = float(325)
+    left_driver.raw = float(477)
+    left_driver.lll = float(308)
     time.sleep(0.4)
-    left_driver.raw = float(346)
-    left_driver.lll = float(325)
+    left_driver.raw = float(417)
+    left_driver.lll = float(308)
     time.sleep(0.4)
 
 def center():
     # 回到中点
-    left_driver.raw = float(323) # 右小 左大
-    left_driver.lll = float(348) # 上大 下小
+    left_driver.raw = float(447) # 右小 左大
+    left_driver.lll = float(338) # 上大 下小
 
 
 def mini_any(img):
@@ -104,8 +105,7 @@ def mini_any(img):
     return point_y,point_x
 
 def any(img):
-    left_driver.raw = float(463) # 右小 左大
-    left_driver.lll = float(339) # 上大 下小
+    center()
     
     
     #point_human_1 = (180, 30)
@@ -124,7 +124,7 @@ def any(img):
 
     #
     
-    img = cv2.dilate(img, np.uint8(np.ones((3, 3))), 10)
+    img = cv2.dilate(img, np.uint8(np.ones((6, 6))), 2)
     img = cv2.bitwise_not(img)
   ##img = cv2.erode(img, ,None, iterations=3)
     cv2.imwrite("233.png",img)
@@ -158,23 +158,25 @@ def list_cocu(x1,y1,x2,y2):
 
 
 def control(list_list,delay):
-    kp = 0.02
-    kd = 0.01
-    ki = 0
-    kpa = 0.01
-    kda = 0.005
-    kia = 0.005
+    kp = 0.04
+    kd = 0.004
+    ki = 0.5
+    kpa = 0.04
+    kda = 0.004
+    kia = 0.05
     dt_y = 0
     dt_x = 0
     for ps in list_list:
         print(ps)
-        for i in range(1,20):
+        for i in range(1,7):
             all_error_x = 0
             all_error_y = 0
             error_past_x = 0
             error_past_y = 0
             ret, img = cap.read()
             px,py = mini_any(img)
+            px = px *1.05
+            py = py *1.04
             error_now_y = (ps[0] - px)
             error_now_x = (ps[1] - py)
             dt_y = error_now_y*kp - (-error_past_y +error_now_y)*kd + all_error_y *ki
@@ -189,6 +191,8 @@ def control(list_list,delay):
             #print(ps[0] - px,ps[1] - py)
             #print(ps)
             #print(px,py)
+            if  GPIO.input(26) or GPIO.input(27):
+                return "stop"
             time.sleep(delay)
 
 
@@ -196,6 +200,7 @@ def control(list_list,delay):
 
 
 if __name__ == '__main__':
+    
     cap = cv2.VideoCapture(-1)
     
     left_driver = motor_driver("/dev/left_roll",115200)
@@ -246,7 +251,27 @@ if __name__ == '__main__':
 
 
             while not GPIO.input(26) or not GPIO.input(27):
-                control(list_1,0.02)
-                control(list_2,0.02)
-                control(list_3,0.02)
-                control(list_4,0.02)
+                if control(list_1,0.001) == "stop":
+                    break
+
+                if control(list_2,0.001) == "stop":
+                    break
+                if control(list_3,0.001) == "stop":
+                    break
+                if control(list_4,0.001) == "stop":
+                    break
+                left_driver.flag = True
+                if control(list_1,0.001) == "stop":
+                    break
+
+                if control(list_2,0.001) == "stop":
+                    break
+                if control(list_3,0.001) == "stop":
+                    break
+                if control(list_4,0.001) == "stop":
+                    break
+                while not GPIO.input(26) or not GPIO.input(27):
+                    for i in left_driver.list:
+                        left_driver.raw = i[0]
+                        left_driver.lll = i[1]
+                        time.sleep(0.005)

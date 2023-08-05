@@ -9,6 +9,8 @@ class motor_driver:
         self.motor_angle = 0
         self.raw = 370
         self.lll = 370
+        self.flag = False
+        self.list = []
         self.serial_port = serial.Serial(
             port=port,
             baudrate=baudrate,
@@ -46,6 +48,8 @@ class motor_driver:
             data = "R" + str(self.lll) + '\n'
             self.serial_port.write(data.encode())
             time.sleep(0.005)
-    
+            if self.flag == True:
+                self.list.append([self.raw,self.lll])
+
     def get_angle(self):
         return self.motor_angle
