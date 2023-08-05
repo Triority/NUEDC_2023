@@ -1,9 +1,3 @@
-# 商业转载请联系作者获得授权，非商业转载请注明出处。
-# For commercial use, please contact the author for authorization. For non-commercial use, please indicate the source.
-# 协议(License)：署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0)
-# 作者(Author)：s-ubt-b
-# 链接(URL)：https://qwqpap.xyz/
-# 来源(Source)：天鹅绒房间
 
 import cv2
 import numpy as np
@@ -23,6 +17,8 @@ def update(x):
         ret, img0 = cap.read()
     elif mode == 'picture':
         img0 = cv2.imread('test.jpg')
+
+    img0 = img0[120:600, 200:500]
     img = img0.copy()
 
     gs = cv2.getTrackbarPos('gs', 'image')
@@ -63,16 +59,16 @@ def update(x):
 
 def img_test():
     sleep = 0.1
-    gs = 0
+    gs = 7
     erode = 0
-    Hmin1 = 100
-    Hmax1 = 125
+    Hmin1 = 153
+    Hmax1 = 179
     Hmin2 = 179
     Hmax2 = 0
-    Smin = 130
+    Smin = 98
     Smax = 255
-    Vmin = 50
-    Vmax = 240
+    Vmin = 33
+    Vmax = 255
     size_min = 1000
 
     # 创建窗口

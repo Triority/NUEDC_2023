@@ -42,7 +42,7 @@ class motor_driver:
     
     def serial_write(self):
         while 114514:
-            data = 'T' + str(self.target_position) + '\n'
+            data = 'T' + str(self.velocity) + '\n'
             self.serial_port.write(data.encode())
             time.sleep(0.02)
 
