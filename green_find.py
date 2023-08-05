@@ -31,11 +31,13 @@ if __name__ == '__main__':
     right_driver.start()
     time.sleep(0.5)
     cap = cv2.VideoCapture(-1)
-    pid_x = PID(-0.0025, 0.0, 0, 0)
-    pid_y = PID(0.0025, 0.0, 0, 0)
+    pid_x = PID(0.0035, 0, 0, 0)
+    pid_y = PID(0.0035, 0, 0, 0)
     try:
         while True:
-            ret, frame = cap.read()
+            print('time:',time.time())
+            for i in range(5):
+                ret, frame = cap.read()
             # red
             red_points = getpoints(frame, np.array([153, 98, 33]), np.array([179, 255, 255]), 7, 0)
             # green
@@ -45,8 +47,10 @@ if __name__ == '__main__':
             if len(red_points)==0:
                 print('NO red')
                 red_points = red
+                get_red = get_red + 1
             else:
                 red = red_points.copy()
+                get_red = 0
             if len(green_points)==0:
                 print('NO green')
                 continue
@@ -55,19 +59,27 @@ if __name__ == '__main__':
 
             error_x =  green_points[0][0] - red_points[0][0]
             error_y = green_points[0][1] - red_points[0][1]
-            move_y = -pid_y(error_y)
-            move_x = -pid_x(error_x)
+
+            if (abs(error_x)^2 + abs(error_y)^2)<100 and get_red>0:
+                move_y = 0
+                move_x = 0
+                left_driver.velocity = move_y
+                right_driver.velocity = move_x
+                
+            else:
+                move_y = -pid_y(error_y)
+                move_x = pid_x(error_x)
             #move_y = 0.01*error_y
             #move_x = -0.01*error_x
 
-            if move_x>1:
-                move_x = 0.1
-            elif move_x<-1:
-                move_x = -0.1
-            if move_y>1:
-                move_y = 0.1
-            elif move_y<-1:
-                move_y = -0.1
+            if move_x>0.3:
+                move_x = 0.3
+            elif move_x<-0.3:
+                move_x = -0.3
+            if move_y>0.3:
+                move_y = 0.3
+            elif move_y<-0.3:
+                move_y = -0.3
             left_driver.velocity = move_y
             right_driver.velocity = move_x
 
